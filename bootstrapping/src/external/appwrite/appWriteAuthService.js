@@ -43,6 +43,22 @@ export class AppWriteAuthService {
         }
     }
 
+    async logout() {
+        try {
+            return await this.account.deleteSessions();
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getCurrentUser() {
+        try {
+            return await this.account.get();
+        } catch (error) {
+            throw error;
+        }
+    }
+
 
 
 

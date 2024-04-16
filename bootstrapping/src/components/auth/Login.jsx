@@ -1,19 +1,51 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {Logo, Input, Button } from '../'
 import { Link } from 'react-router-dom'
 import authServiceObj from '../../services/authService'
 import { useForm } from 'react-hook-form'
+import { useDispatch } from 'react-redux'
+import { login as setUserAsLoggedIn } from '../../store/UserAuthSlice'
+
 
 export default function Login() {
+    const dispatch = useDispatch()
 
-    const {register, handleSubmit} = useForm()
-    const [error, setError] = useState()
+    const {
+        register, 
+        handleSubmit,
+        formState: { errors },
+        // setError,
+
+    } = useForm()
+
+    const [errorMessage, setErrorMessage] = useState('')
+    const clearpassword = () => {
+        console.log('cleaspass')
+        setErrorMessage('')
+    }
+    
 
     // const handleSubmit = () => { console.log('Handle submit in Login page')}
-    const login = async (data) => { 
-        setError('')
-        const session = await authServiceObj.login(data);
-        console.log('session', session);
+    const userlogin = async (data) => { 
+        // console.log('formstate:  ', errors)
+        setErrorMessage('')
+        console.log('login called with data: ' , data)
+        try {
+            const session = await authServiceObj.login(data);
+            if(session) {
+                console.log('session received ', session)
+                const currentUserData = await authServiceObj.getCurrentLoggedInUserData();
+                if(currentUserData) {
+                    console.log('received current userdata, ' , currentUserData);
+                    dispatch(setUserAsLoggedIn(currentUserData))
+                }
+            }
+            
+            
+        } catch (error) {
+            console.log('error::::', error)
+            setErrorMessage(error.response.message)
+        }
     }
  
     return (
@@ -38,15 +70,21 @@ export default function Login() {
                             Sign Up
                         </Link>
                     </p>
-                    {error && <p className='text-red-500 mt-8 text-center'>{error}</p>}
-                    <form onSubmit={handleSubmit(login)} className='mt-8'>
+                    {errors && (
+                        <p className='text-red-500 mt-8 text-center'>
+                            {Object.values(errors).map(error => (
+                                <li key={error.message}>{error.message}</li>
+                            ))}
+                        </p>)}
+                    {errorMessage && <p className='text-red-500 mt-8 text-center'>{errorMessage}</p>}
+                    <form onSubmit={handleSubmit(userlogin)} className='mt-8'>
                         <div className='space-y-5'>
                             <Input
                                 label='Email: '
                                 placeholder='Enter your email'
                                 type='email'
                                 {...register('email', {
-                                    required: true,
+                                    required: 'email is required',
                                     validate: {
                                         matchPatern: (value) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value) || 
                                         'Enter a valid email address',
@@ -58,8 +96,9 @@ export default function Login() {
                                     type='password'
                                     placeholder='Enter your password'
                                     {...register('password', {
-                                        required: true
+                                        required: 'password is required'
                                     })} 
+                                    onChange={clearpassword}
                                 />
 
                                 <Button 

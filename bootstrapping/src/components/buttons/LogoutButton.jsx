@@ -1,8 +1,19 @@
 import React from 'react'
+import { useDispatch } from 'react-redux'
+import authServiceObj from '../../services/authService'
+import { logout } from '../../store/UserAuthSlice'
+
 
 export default function LogoutButton() {
+    const dispatch = useDispatch()
 
-    const logoutHandler = () => {}
+    const logoutHandler = () => {
+        console.log('logoutcalled')
+        authServiceObj.logout()
+            .then(() => {
+                dispatch(logout())
+        })
+    }
 
     
     return (
